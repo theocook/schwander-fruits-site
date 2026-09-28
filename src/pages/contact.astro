@@ -1,0 +1,51 @@
+---
+import Base from '../layouts/Base.astro'
+import { site, pointsDeVente } from '../data/site.js'
+const ferme = pointsDeVente[0]
+---
+
+<Base title="Contact" description="Téléphone, e-mail et adresse de la ferme Schwander à Cheseaux-Noréaz.">
+  <div class="mx-auto max-w-3xl px-4 py-14 sm:px-6 sm:py-16">
+    <h1 class="text-4xl font-semibold text-forest sm:text-5xl">Contact</h1>
+    <p class="mt-3 leading-relaxed text-ink/70">
+      Le plus simple reste le téléphone : nous sommes souvent dans les cultures.
+    </p>
+
+    <div class="mt-10 grid gap-4 sm:grid-cols-2">
+      <a
+        href={`tel:${site.telephone.replace(/\s/g, '')}`}
+        class="border border-forest/10 bg-white/70 p-6 transition hover:border-forest/25"
+      >
+        <p class="text-xs font-semibold uppercase tracking-[0.12em] text-ink/45">Téléphone</p>
+        <p class="mt-2 font-serif text-xl font-semibold text-forest">{site.telephone}</p>
+      </a>
+      <a
+        href={`tel:${site.mobile.replace(/\s/g, '')}`}
+        class="border border-forest/10 bg-white/70 p-6 transition hover:border-forest/25"
+      >
+        <p class="text-xs font-semibold uppercase tracking-[0.12em] text-ink/45">Mobile</p>
+        <p class="mt-2 font-serif text-xl font-semibold text-forest">{site.mobile}</p>
+      </a>
+      <a
+        href={`mailto:${site.email}`}
+        class="border border-forest/10 bg-white/70 p-6 transition hover:border-forest/25 sm:col-span-2"
+      >
+        <p class="text-xs font-semibold uppercase tracking-[0.12em] text-ink/45">E-mail</p>
+        <p class="mt-2 font-serif text-xl font-semibold break-all text-forest">{site.email}</p>
+      </a>
+    </div>
+
+    <div class="mt-10 border border-forest/10 bg-leaf/50 p-6 sm:p-7">
+      <h2 class="font-serif text-lg font-semibold text-forest">Adresse</h2>
+      <p class="mt-2 leading-relaxed text-ink/75">{ferme.adresse}</p>
+      <dl class="mt-5 space-y-1 text-sm">
+        {ferme.horaires.map((h) => (
+          <div class="flex justify-between gap-4 border-b border-forest/8 py-2">
+            <dt class="text-ink/70">{h.jours}</dt>
+            <dd class="font-medium tabular-nums text-forest">{h.heures}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  </div>
+</Base>

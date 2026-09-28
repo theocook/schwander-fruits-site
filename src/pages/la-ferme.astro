@@ -1,0 +1,69 @@
+---
+import Base from '../layouts/Base.astro'
+import { site } from '../data/site.js'
+const chiffres = [
+  { valeur: '25+', label: 'variétés de pommes et de poires' },
+  { valeur: 'PER', label: 'prestations écologiques requises' },
+  { valeur: '0', label: 'intermédiaire entre le verger et vous' },
+]
+---
+
+<Base
+  title="La ferme"
+  description="L’exploitation familiale Schwander à Cheseaux-Noréaz, face au lac de Neuchâtel."
+>
+  <div class="mx-auto max-w-4xl px-4 py-14 sm:px-6 sm:py-16">
+    <h1 class="text-4xl font-semibold text-forest sm:text-5xl">La ferme</h1>
+    <p class="mt-5 text-lg leading-relaxed text-ink/75">
+      À Cheseaux-Noréaz, entre Yverdon-les-Bains et le lac de Neuchâtel, la famille Schwander cultive fruits
+      et légumes depuis plusieurs générations.
+    </p>
+
+    <img
+      src="/photos/home/hero_cinema.png"
+      alt="Les vergers de la ferme Schwander"
+      width="1536"
+      height="1024"
+      loading="lazy"
+      class="mt-10 aspect-[16/9] w-full object-cover"
+    />
+
+    <div class="mt-10 grid gap-4 sm:grid-cols-3">
+      {chiffres.map((c) => (
+        <div class="border border-forest/10 bg-leaf/50 p-5">
+          <p class="font-serif text-3xl font-semibold text-forest">{c.valeur}</p>
+          <p class="mt-1 text-sm leading-snug text-ink/65">{c.label}</p>
+        </div>
+      ))}
+    </div>
+
+    <div class="mt-12 space-y-5 leading-relaxed text-ink/75">
+      <h2 class="text-2xl font-semibold text-forest">Notre façon de travailler</h2>
+      <p>
+        Nos vergers et nos cultures maraîchères suivent le cahier des charges des prestations écologiques
+        requises (PER) : rotation des cultures, protection ciblée, surfaces de promotion de la biodiversité.
+      </p>
+      <p>
+        La récolte part directement au point de vente. C’est ce circuit très court qui explique que notre
+        offre change de semaine en semaine — et c’est aussi ce qui fait le goût.
+      </p>
+
+      <h2 class="pt-4 text-2xl font-semibold text-forest">Nos produits</h2>
+      <p>
+        Une trentaine de variétés de pommes et de poires, des fruits d’été (cerises, prunes, pruneaux, pêches,
+        abricots), des petits fruits, des légumes de saison et des pommes de terre. S’y ajoutent le miel du
+        pays et notre jus de pommes.
+      </p>
+    </div>
+
+    <div class="mt-12 border border-forest/10 bg-white/70 p-7 text-center">
+      <p class="font-serif text-xl font-semibold text-forest">Envie de passer nous voir ?</p>
+      <a
+        href="/ou-nous-trouver"
+        class="mt-5 inline-block bg-forest px-6 py-3 text-sm font-semibold text-cream transition hover:bg-green"
+      >
+        Horaires et accès
+      </a>
+    </div>
+  </div>
+</Base>

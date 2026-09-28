@@ -1,0 +1,112 @@
+---
+import Logo from './Logo.astro'
+const links = [
+  { href: '/', label: 'Accueil' },
+  { href: '/produits', label: 'Nos produits' },
+  { href: '/la-ferme', label: 'La ferme' },
+  { href: '/ou-nous-trouver', label: 'Où nous trouver' },
+  { href: '/contact', label: 'Contact' },
+]
+const path = Astro.url.pathname.replace(/\/$/, '') || '/'
+---
+
+<header class="sticky top-0 z-50 border-b border-forest/12 bg-cream">
+  <div class="mx-auto flex h-16 max-w-6xl items-center gap-3 px-5 sm:px-8">
+    <a href="/" class="flex shrink-0 items-center gap-2.5">
+      <Logo size={38} />
+      <span class="leading-tight">
+        <span class="block font-serif text-lg font-semibold text-forest">Schwander</span>
+        <span class="surtitre block text-[9.5px] text-ink/45">Fruits &amp; Légumes</span>
+      </span>
+    </a>
+
+    <nav class="ml-auto hidden lg:block" aria-label="Navigation principale">
+      <ul class="flex items-center gap-7">
+        {links.map((l) => (
+          <li>
+            <a
+              href={l.href}
+              aria-current={path === l.href ? 'page' : undefined}
+              class:list={[
+                'surtitre border-b-2 pb-1 transition-colors',
+                path === l.href
+                  ? 'border-green text-forest'
+                  : 'border-transparent text-ink/50 hover:border-forest/25 hover:text-forest',
+              ]}
+            >
+              {l.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    <!-- Menu mobile : panneau plein écran, sans JavaScript (details/summary natif). -->
+    <details class="group ml-auto lg:hidden">
+      <summary
+        class="flex h-10 w-10 cursor-pointer list-none items-center justify-center border border-forest/20 text-forest [&::-webkit-details-marker]:hidden"
+        aria-label="Menu"
+      >
+        <svg
+          class="group-open:hidden"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="square"
+        >
+          <path d="M3 6h18M3 12h18M3 18h18" />
+        </svg>
+        <svg
+          class="hidden group-open:block"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="square"
+        >
+          <path d="M5 5l14 14M19 5L5 19" />
+        </svg>
+      </summary>
+
+      <div class="fixed inset-x-0 top-16 bottom-0 z-40 flex flex-col overflow-y-auto border-t border-forest/12 bg-cream">
+        <nav aria-label="Navigation principale">
+          <ul>
+            {links.map((l, i) => (
+              <li>
+                <a
+                  href={l.href}
+                  aria-current={path === l.href ? 'page' : undefined}
+                  class:list={[
+                    'flex items-baseline gap-5 border-b border-forest/10 px-6 py-5',
+                    path === l.href && 'bg-leaf/60',
+                  ]}
+                >
+                  <span class="surtitre tabular-nums text-green">0{i + 1}</span>
+                  <span class="font-serif text-2xl font-semibold text-forest">{l.label}</span>
+                  {path === l.href && <span class="surtitre ml-auto text-ink/35">Vous êtes ici</span>}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <div class="mt-auto border-t border-forest/12 bg-paper px-6 py-6">
+          <p class="surtitre text-green">La ferme · Cheseaux-Noréaz</p>
+          <p class="mt-2 text-sm leading-relaxed text-ink/65">
+            Lun – ven 8h00 – 18h30 · Sam 14h00 – 17h30 · Dim 9h00 – 17h00
+          </p>
+          <a
+            href="tel:0244260791"
+            class="mt-4 inline-block bg-forest px-6 py-3 text-sm font-semibold text-cream"
+          >
+            024 426 07 91
+          </a>
+        </div>
+      </div>
+    </details>
+  </div>
+</header>

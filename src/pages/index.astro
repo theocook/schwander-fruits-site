@@ -1,0 +1,208 @@
+---
+import Base from '../layouts/Base.astro'
+import ProductRow from '../components/ProductRow.astro'
+import { products } from '../data/products.js'
+import { site, pointsDeVente } from '../data/site.js'
+
+const enVente = [
+  ...products.filter((p) => p.status === 'disponible'),
+  ...products.filter((p) => p.status === 'fin-de-saison'),
+]
+const bientot = products.filter((p) => p.status === 'bientot')
+const maj = new Date().toLocaleDateString('fr-CH', { day: 'numeric', month: 'long' })
+const moitie = Math.ceil(enVente.length / 2)
+---
+
+<Base>
+  <!-- Hero : compact, tourné vers la question « qu'est-ce qui est disponible ? » -->
+  <section class="relative isolate overflow-hidden bg-forest">
+    <img
+      src="/photos/home/hero.PNG"
+      alt=""
+      aria-hidden="true"
+      width="1536"
+      height="1024"
+      fetchpriority="high"
+      class="absolute inset-0 -z-10 h-full w-full object-cover opacity-40"
+    />
+    <div class="mx-auto max-w-6xl px-5 pt-14 pb-10 sm:px-8 sm:pt-24 sm:pb-16">
+      <p class="surtitre flex items-center gap-3 text-cream/70">
+        <span class="h-px w-8 bg-cream/40"></span>
+        {site.lieu} · Vaud · {site.label}
+      </p>
+      <h1 class="mt-5 max-w-3xl text-[2.4rem] leading-[1.04] font-semibold text-cream sm:text-6xl">
+        Ce qui est mûr,
+        <br />
+        <span class="italic text-leaf">aujourd'hui.</span>
+      </h1>
+      <p class="mt-5 max-w-md leading-relaxed text-cream/75">
+        Fruits et légumes cultivés face au lac de Neuchâtel, vendus à la ferme et au marché
+        d'Yverdon-les-Bains.
+      </p>
+      <div class="mt-8 flex flex-wrap items-stretch gap-3">
+        <a
+          href="#ardoise"
+          class="flex items-center gap-3 bg-cream px-6 py-3.5 text-sm font-semibold text-forest transition hover:bg-white"
+        >
+          <span class="flex h-2 w-2 shrink-0 bg-green"></span>
+          {enVente.length} produits en vente — voir l'ardoise
+        </a>
+        <a
+          href="/ou-nous-trouver"
+          class="flex items-center border border-cream/35 px-6 py-3.5 text-sm font-semibold text-cream transition hover:bg-cream/10"
+        >
+          Où nous trouver
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- La barre du jour : s'adapte au jour de la semaine (petit script, repli statique). -->
+  <section class="border-b border-forest/12 bg-paper">
+    <div class="mx-auto grid max-w-6xl divide-y divide-forest/10 px-5 text-sm sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:px-8">
+      <div class="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 py-3.5 sm:pr-6">
+        <span class="surtitre shrink-0 text-green">La ferme</span>
+        <span class="min-w-0 text-ink/70" data-jour="ferme">
+          Lun–ven 8h–18h30 · Sam 14h–17h30 · Dim 9h–17h
+        </span>
+      </div>
+      <div class="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 py-3.5 sm:px-6">
+        <span class="surtitre shrink-0 text-green">Marché d'Yverdon</span>
+        <span class="min-w-0 text-ink/70" data-jour="marche">
+          Mardi &amp; samedi matin
+        </span>
+      </div>
+      <div class="hidden items-baseline gap-x-3 py-3.5 sm:flex sm:pl-6">
+        <span class="surtitre shrink-0 text-green">Mise à jour</span>
+        <span class="text-ink/70">le {maj}</span>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // Adapte la barre au jour de la visite. Si le script ne tourne pas, les horaires complets restent affichés.
+    const jour = new Date().getDay() // 0 = dimanche
+    const ferme = document.querySelector('[data-jour="ferme"]')
+    const marche = document.querySelector('[data-jour="marche"]')
+    const HORAIRES = [
+      '9h00 – 17h00',
+      '8h00 – 18h30',
+      '8h00 – 18h30',
+      '8h00 – 18h30',
+      '8h00 – 18h30',
+      '8h00 – 18h30',
+      '14h00 – 17h30',
+    ]
+    if (ferme)
+      ferme.innerHTML = `Ouverte aujourd'hui · <strong class="font-semibold text-forest">${HORAIRES[jour]}</strong>`
+    if (marche && (jour === 2 || jour === 6))
+      marche.innerHTML = `<strong class="font-semibold text-forest">Jour de marché !</strong> Ce matin, place Pestalozzi`
+    else if (marche)
+      marche.textContent =
+        jour === 1 || jour === 5 ? 'Demain matin, place Pestalozzi' : 'Mardi & samedi matin'
+  </script>
+  <!-- L'ardoise -->
+  <section id="ardoise" class="mx-auto max-w-6xl scroll-mt-20 px-5 py-20 sm:px-8 sm:py-24">
+    <div class="flex flex-wrap items-end justify-between gap-6 border-b-2 border-forest pb-5">
+      <div>
+        <p class="surtitre text-green">L’ardoise de la semaine</p>
+        <h2 class="mt-3 flex items-baseline gap-4 text-4xl font-semibold text-forest sm:text-5xl">
+          <span class="font-serif text-6xl tabular-nums sm:text-7xl">{enVente.length}</span>
+          <span>produits en vente</span>
+        </h2>
+      </div>
+      <p class="surtitre text-ink/45">Mis à jour le {maj}</p>
+    </div>
+
+    {enVente.length > 0 ? (
+      <div class="mt-3 gap-x-14 md:columns-2">
+        {enVente.map((p) => (
+          <div class="break-inside-avoid">
+            <ProductRow product={p} showCategory />
+          </div>
+        ))}
+      </div>
+    ) : (
+      <p class="mt-10 border border-dashed border-forest/25 px-6 py-14 text-center text-sm text-ink/55">
+        Aucun produit disponible en ce moment. Revenez bientôt.
+      </p>
+    )}
+
+    <div class="mt-10 flex flex-wrap items-center justify-between gap-4">
+      <a
+        href="/produits"
+        class="surtitre border-b-2 border-green pb-1 text-forest transition hover:text-green"
+      >
+        Voir les {products.length} produits →
+      </a>
+    </div>
+
+    {bientot.length > 0 && (
+      <div class="mt-14 border-l-2 border-amber-500 bg-paper px-6 py-6 sm:px-8">
+        <p class="surtitre text-amber-700">Ce qui arrive bientôt</p>
+        <p class="mt-3 font-serif text-lg leading-relaxed text-forest">
+          {bientot.map((p) => p.name).join(' · ')}
+        </p>
+      </div>
+    )}
+  </section>
+
+  <!-- Points de vente -->
+  <section class="border-y border-forest/12 bg-paper">
+    <div class="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24">
+      <p class="surtitre text-green">Nous rencontrer</p>
+      <h2 class="mt-3 text-4xl font-semibold text-forest sm:text-5xl">Deux points de vente</h2>
+      <div class="mt-12 grid gap-px bg-forest/12 md:grid-cols-2">
+        {pointsDeVente.map((pv, i) => (
+          <div class="bg-paper p-7 sm:p-9">
+            <p class="surtitre text-ink/35">0{i + 1}</p>
+            <h3 class="mt-3 font-serif text-2xl font-semibold text-forest">{pv.nom}</h3>
+            <p class="mt-1.5 text-sm text-ink/55">{pv.adresse}</p>
+            <p class="mt-5 leading-relaxed text-ink/75">{pv.detail}</p>
+            <dl class="mt-7 space-y-0">
+              {pv.horaires.map((h) => (
+                <div class="flex justify-between gap-4 border-t border-forest/10 py-2.5 text-sm">
+                  <dt class="text-ink/65">{h.jours}</dt>
+                  <dd class="font-semibold tabular-nums text-forest">{h.heures}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- La ferme -->
+  <section class="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24">
+    <div class="grid items-center gap-12 md:grid-cols-[1fr_1.1fr]">
+      <div>
+        <p class="surtitre text-green">La ferme</p>
+        <h2 class="mt-3 text-4xl font-semibold text-forest sm:text-5xl text-balance">
+          Une exploitation familiale
+        </h2>
+        <p class="mt-7 leading-relaxed text-ink/75">
+          Depuis Cheseaux-Noréaz, la famille Schwander cultive une trentaine de variétés de pommes et de
+          poires, des fruits d’été et des légumes de saison, selon les prestations écologiques requises.
+        </p>
+        <p class="mt-4 leading-relaxed text-ink/75">
+          Pas d’intermédiaire : ce que vous achetez a poussé à quelques centaines de mètres du point de vente.
+        </p>
+        <a
+          href="/la-ferme"
+          class="surtitre mt-9 inline-block border-b-2 border-green pb-1 text-forest transition hover:text-green"
+        >
+          Découvrir la ferme →
+        </a>
+      </div>
+      <img
+        src="/photos/home/hero_cinema.png"
+        alt="Les vergers de la ferme Schwander"
+        width="1536"
+        height="1024"
+        loading="lazy"
+        class="aspect-[5/4] w-full object-cover"
+      />
+    </div>
+  </section>
+</Base>

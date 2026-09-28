@@ -1,0 +1,16 @@
+---
+/** Statut d'un produit. Pas de pilule : un carré de couleur et un label en capitales. */
+const { status } = Astro.props
+const STYLES = {
+  disponible: { label: 'Disponible', dot: 'bg-green', txt: 'text-green' },
+  bientot: { label: 'Bientôt', dot: 'bg-amber-500', txt: 'text-amber-700' },
+  'fin-de-saison': { label: 'Dernière chance', dot: 'bg-orange-600', txt: 'text-orange-700' },
+  'pas-de-saison': { label: 'Hors saison', dot: 'bg-ink/25', txt: 'text-ink/40' },
+}
+const s = STYLES[status] ?? STYLES['pas-de-saison']
+---
+
+<span class:list={['surtitre inline-flex items-center gap-1.5 whitespace-nowrap', s.txt]}>
+  <span class:list={['h-[7px] w-[7px] shrink-0', s.dot]}></span>
+  {s.label}
+</span>

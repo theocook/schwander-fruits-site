@@ -1,0 +1,53 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/fraunces';
+
+@theme {
+  --color-forest: #123a25;
+  --color-green: #3f8f4a;
+  --color-leaf: #e4ede0;
+  --color-cream: #faf6ec;
+  --color-paper: #fffdf7;
+  --color-ink: #1b241e;
+  --color-earth: #a9743c;
+  --color-apple: #c4443c;
+
+  --font-sans: 'Inter Variable', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Fraunces Variable', Georgia, serif;
+
+  /* Angles vifs : le geste éditorial du site. Aucun arrondi nulle part. */
+  --radius-none: 0px;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background: var(--color-cream);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    /* Grain de papier très léger : donne de la matière sans alourdir (aucune image). */
+    background-image: radial-gradient(rgba(18, 58, 37, 0.028) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-serif);
+    font-variation-settings:
+      'SOFT' 0,
+      'WONK' 0;
+  }
+  h1,
+  h2 {
+    letter-spacing: -0.025em;
+  }
+}
+
+@utility surtitre {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+}
