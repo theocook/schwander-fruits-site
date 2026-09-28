@@ -1,16 +1,22 @@
 ---
 import Base from '../layouts/Base.astro'
 import ProductRow from '../components/ProductRow.astro'
-import { products } from '../data/products.js'
+import { getCatalogue } from '../data/catalogue.js'
+import { EN_VENTE } from '../lib/sanity.js'
 import { site, pointsDeVente } from '../data/site.js'
 
-const enVente = [
-  ...products.filter((p) => p.status === 'disponible'),
-  ...products.filter((p) => p.status === 'fin-de-saison'),
-]
+const { products, categories } = await getCatalogue()
+const labelDe = Object.fromEntries(categories.map((c) => [c.id, c.label]))
+
+// L'ardoise rend TOUS les produits (les hors-vente masqués) : le navigateur
+// peut ainsi refléter un changement de statut sans reconstruire la page.
+const poids = { disponible: 0, 'fin-de-saison': 1, bientot: 2, 'pas-de-saison': 3 }
+const tous = [...products].sort((a, b) => poids[a.status] - poids[b.status])
+const enVente = tous.filter((p) => EN_VENTE.includes(p.status))
 const bientot = products.filter((p) => p.status === 'bientot')
+
+// Date du dernier déploiement : elle se met à jour toute seule à chaque publication.
 const maj = new Date().toLocaleDateString('fr-CH', { day: 'numeric', month: 'long' })
-const moitie = Math.ceil(enVente.length / 2)
 ---
 
 <Base>
@@ -45,7 +51,9 @@ const moitie = Math.ceil(enVente.length / 2)
           class="flex items-center gap-3 bg-cream px-6 py-3.5 text-sm font-semibold text-forest transition hover:bg-white"
         >
           <span class="flex h-2 w-2 shrink-0 bg-green"></span>
-          {enVente.length} produits en vente — voir l'ardoise
+          <span>
+            <span data-compteur>{enVente.length}</span> produits en vente — voir l'ardoise
+          </span>
         </a>
         <a
           href="/ou-nous-trouver"
@@ -105,28 +113,36 @@ const moitie = Math.ceil(enVente.length / 2)
   <section id="ardoise" class="mx-auto max-w-6xl scroll-mt-20 px-5 py-20 sm:px-8 sm:py-24">
     <div class="flex flex-wrap items-end justify-between gap-6 border-b-2 border-forest pb-5">
       <div>
-        <p class="surtitre text-green">L’ardoise de la semaine</p>
+        <p class="surtitre text-green">L'ardoise de la semaine</p>
         <h2 class="mt-3 flex items-baseline gap-4 text-4xl font-semibold text-forest sm:text-5xl">
-          <span class="font-serif text-6xl tabular-nums sm:text-7xl">{enVente.length}</span>
+          <span class="font-serif text-6xl tabular-nums sm:text-7xl" data-compteur>
+            {enVente.length}
+          </span>
           <span>produits en vente</span>
         </h2>
       </div>
       <p class="surtitre text-ink/45">Mis à jour le {maj}</p>
     </div>
 
-    {enVente.length > 0 ? (
-      <div class="mt-3 gap-x-14 md:columns-2">
-        {enVente.map((p) => (
-          <div class="break-inside-avoid">
-            <ProductRow product={p} showCategory />
-          </div>
-        ))}
-      </div>
-    ) : (
-      <p class="mt-10 border border-dashed border-forest/25 px-6 py-14 text-center text-sm text-ink/55">
-        Aucun produit disponible en ce moment. Revenez bientôt.
-      </p>
-    )}
+    <div class="mt-3 gap-x-14 md:columns-2">
+      {tous.map((p) => (
+        <div
+          class="break-inside-avoid"
+          data-produit
+          data-id={p.id}
+          data-statut={p.status}
+          hidden={!EN_VENTE.includes(p.status)}
+        >
+          <ProductRow product={p} showCategory categoryLabel={labelDe[p.category]} />
+        </div>
+      ))}
+    </div>
+    <p
+      class="mt-10 hidden border border-dashed border-forest/25 px-6 py-14 text-center text-sm text-ink/55"
+      data-ardoise-vide
+    >
+      Aucun produit disponible en ce moment. Revenez bientôt.
+    </p>
 
     <div class="mt-10 flex flex-wrap items-center justify-between gap-4">
       <a
@@ -137,16 +153,45 @@ const moitie = Math.ceil(enVente.length / 2)
       </a>
     </div>
 
-    {bientot.length > 0 && (
-      <div class="mt-14 border-l-2 border-amber-500 bg-paper px-6 py-6 sm:px-8">
-        <p class="surtitre text-amber-700">Ce qui arrive bientôt</p>
-        <p class="mt-3 font-serif text-lg leading-relaxed text-forest">
-          {bientot.map((p) => p.name).join(' · ')}
-        </p>
-      </div>
-    )}
+    <div
+      class="mt-14 border-l-2 border-amber-500 bg-paper px-6 py-6 sm:px-8"
+      data-bientot
+      hidden={bientot.length === 0}
+    >
+      <p class="surtitre text-amber-700">Ce qui arrive bientôt</p>
+      <p class="mt-3 font-serif text-lg leading-relaxed text-forest" data-bientot-liste>
+        {bientot.map((p) => p.name).join(' · ')}
+      </p>
+    </div>
   </section>
 
+  <script>
+    import '../scripts/maj-statuts.js'
+    import { EN_VENTE } from '../lib/sanity.js'
+
+    // Quand les statuts frais arrivent, l'ardoise se recompose : rangées, compteurs, bloc « bientôt ».
+    document.addEventListener('statuts:maj', () => {
+      const rangees = [...document.querySelectorAll('#ardoise [data-produit]')]
+      rangees.forEach((el) => {
+        el.hidden = !EN_VENTE.includes(el.dataset.statut)
+      })
+      const visibles = rangees.filter((el) => !el.hidden).length
+      document.querySelectorAll('[data-compteur]').forEach((el) => (el.textContent = String(visibles)))
+      const vide = document.querySelector('[data-ardoise-vide]')
+      if (vide) vide.classList.toggle('hidden', visibles > 0)
+
+      const noms = rangees
+        .filter((el) => el.dataset.statut === 'bientot')
+        .map((el) => el.querySelector('h3')?.textContent.trim())
+        .filter(Boolean)
+      const bloc = document.querySelector('[data-bientot]')
+      if (bloc) {
+        bloc.hidden = noms.length === 0
+        const liste = bloc.querySelector('[data-bientot-liste]')
+        if (liste) liste.textContent = noms.join(' · ')
+      }
+    })
+  </script>
   <!-- Points de vente -->
   <section class="border-y border-forest/12 bg-paper">
     <div class="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-24">
@@ -178,15 +223,15 @@ const moitie = Math.ceil(enVente.length / 2)
     <div class="grid items-center gap-12 md:grid-cols-[1fr_1.1fr]">
       <div>
         <p class="surtitre text-green">La ferme</p>
-        <h2 class="mt-3 text-4xl font-semibold text-forest sm:text-5xl text-balance">
+        <h2 class="mt-3 text-4xl font-semibold text-balance text-forest sm:text-5xl">
           Une exploitation familiale
         </h2>
         <p class="mt-7 leading-relaxed text-ink/75">
           Depuis Cheseaux-Noréaz, la famille Schwander cultive une trentaine de variétés de pommes et de
-          poires, des fruits d’été et des légumes de saison, selon les prestations écologiques requises.
+          poires, des fruits d'été et des légumes de saison, selon les prestations écologiques requises.
         </p>
         <p class="mt-4 leading-relaxed text-ink/75">
-          Pas d’intermédiaire : ce que vous achetez a poussé à quelques centaines de mètres du point de vente.
+          Pas d'intermédiaire : ce que vous achetez a poussé à quelques centaines de mètres du point de vente.
         </p>
         <a
           href="/la-ferme"

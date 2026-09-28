@@ -1,12 +1,13 @@
 ---
 import Base from '../layouts/Base.astro'
 import ProductRow from '../components/ProductRow.astro'
-import { products, CATEGORIES, STATUSES } from '../data/products.js'
+import { getCatalogue } from '../data/catalogue.js'
+import { STATUSES } from '../data/products.js'
 
-const parCategorie = CATEGORIES.map((c) => ({
-  ...c,
-  items: products.filter((p) => p.category === c.id),
-})).filter((c) => c.items.length > 0)
+const { products, categories } = await getCatalogue()
+const parCategorie = categories
+  .map((c) => ({ ...c, items: products.filter((p) => p.category === c.id) }))
+  .filter((c) => c.items.length > 0)
 const compteurs = Object.fromEntries(
   STATUSES.map((s) => [s.id, products.filter((p) => p.status === s.id).length]),
 )
@@ -21,7 +22,7 @@ const compteurs = Object.fromEntries(
     <h1 class="mt-3 text-4xl font-semibold text-forest sm:text-6xl">Nos produits</h1>
     <p class="mt-5 max-w-xl leading-relaxed text-ink/70">
       {products.length} produits cultivés ou préparés à la ferme. Le repère de couleur indique ce qui est
-      disponible aujourd’hui.
+      disponible aujourd'hui.
     </p>
 
     <!-- Filtres. Sans JavaScript, tout reste affiché : rien n'est perdu. -->
@@ -41,8 +42,11 @@ const compteurs = Object.fromEntries(
           aria-pressed="false"
           class="flex items-center gap-2 text-ink/45 transition aria-pressed:text-forest"
         >
-          <span class="h-[7px] w-[7px] shrink-0" style={`background:${s.color}`}></span>
-          {s.label} <span class="tabular-nums opacity-55">{compteurs[s.id]}</span>
+          <span class="h-[7px] w-[7px] shrink-0" style={`background:${s.color}`} />
+          {s.label}
+          <span class="tabular-nums opacity-55" data-compte-statut>
+            {compteurs[s.id]}
+          </span>
         </button>
       ))}
     </div>
@@ -58,7 +62,7 @@ const compteurs = Object.fromEntries(
         </div>
         <div class="mt-2">
           {cat.items.map((p) => (
-            <div data-produit data-statut={p.status}>
+            <div data-produit data-id={p.id} data-statut={p.status}>
               <ProductRow product={p} />
             </div>
           ))}
@@ -71,15 +75,14 @@ const compteurs = Object.fromEntries(
   </div>
 
   <script>
-    const barre = document.querySelector('[data-filtres]')
-    barre?.addEventListener('click', (e) => {
-      const bouton = e.target.closest('[data-statut]')
-      if (!bouton) return
-      const choix = bouton.dataset.statut
-      barre
-        .querySelectorAll('[data-statut]')
-        .forEach((b) => b.setAttribute('aria-pressed', String(b === bouton)))
+    import '../scripts/maj-statuts.js'
 
+    const barre = document.querySelector('[data-filtres]')
+    const boutons = () => [...barre.querySelectorAll('[data-statut]')]
+
+    function appliquer() {
+      const actif = barre.querySelector('[aria-pressed="true"]')
+      const choix = actif ? actif.dataset.statut : 'tous'
       document.querySelectorAll('[data-produit]').forEach((el) => {
         el.hidden = choix !== 'tous' && el.dataset.statut !== choix
       })
@@ -89,6 +92,26 @@ const compteurs = Object.fromEntries(
         sec.querySelector('[data-compte]').textContent = String(visibles)
         sec.querySelector('[data-vide]').classList.toggle('hidden', visibles > 0)
       })
+    }
+
+    barre?.addEventListener('click', (e) => {
+      const bouton = e.target.closest('[data-statut]')
+      if (!bouton) return
+      boutons().forEach((b) => b.setAttribute('aria-pressed', String(b === bouton)))
+      appliquer()
+    })
+
+    // Statuts frais reçus de Sanity : les compteurs de la barre et le filtre courant se recalculent.
+    document.addEventListener('statuts:maj', () => {
+      const nb = {}
+      document.querySelectorAll('[data-produit]').forEach((el) => {
+        nb[el.dataset.statut] = (nb[el.dataset.statut] ?? 0) + 1
+      })
+      boutons().forEach((b) => {
+        const compte = b.querySelector('[data-compte-statut]')
+        if (compte) compte.textContent = String(nb[b.dataset.statut] ?? 0)
+      })
+      appliquer()
     })
   </script>
 </Base>

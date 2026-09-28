@@ -1,16 +1,11 @@
 ---
-/** Statut d'un produit. Pas de pilule : un carré de couleur et un label en capitales. */
+import { STATUS_STYLES, TAG_BASE, DOT_BASE } from '../lib/sanity.js'
+
 const { status } = Astro.props
-const STYLES = {
-  disponible: { label: 'Disponible', dot: 'bg-green', txt: 'text-green' },
-  bientot: { label: 'Bientôt', dot: 'bg-amber-500', txt: 'text-amber-700' },
-  'fin-de-saison': { label: 'Dernière chance', dot: 'bg-orange-600', txt: 'text-orange-700' },
-  'pas-de-saison': { label: 'Hors saison', dot: 'bg-ink/25', txt: 'text-ink/40' },
-}
-const s = STYLES[status] ?? STYLES['pas-de-saison']
+const s = STATUS_STYLES[status] ?? STATUS_STYLES['pas-de-saison']
 ---
 
-<span class:list={['surtitre inline-flex items-center gap-1.5 whitespace-nowrap', s.txt]}>
-  <span class:list={['h-[7px] w-[7px] shrink-0', s.dot]}></span>
-  {s.label}
+<span data-tag class:list={[TAG_BASE, s.txt]}>
+  <span data-dot class:list={[DOT_BASE, s.dot]}></span>
+  <span data-label>{s.label}</span>
 </span>

@@ -3,7 +3,7 @@ import { structureTool } from 'sanity/structure'
 import { frFRLocale } from '@sanity/locale-fr-fr'
 import { schemaTypes } from './schemas/index.js'
 
-const projectId = process.env.SANITY_STUDIO_PROJECT_ID || 'a-completer'
+const projectId = process.env.SANITY_STUDIO_PROJECT_ID || 'gf4it2ok'
 
 export default defineConfig({
   name: 'schwander',
