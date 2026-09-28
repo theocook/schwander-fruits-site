@@ -1,0 +1,17 @@
+{
+  "name": "schwander-studio",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "sanity dev",
+    "deploy": "sanity deploy"
+  },
+  "dependencies": {
+    "@sanity/locale-fr-fr": "^1",
+    "react": "^19",
+    "react-dom": "^19",
+    "sanity": "^6",
+    "styled-components": "^6"
+  }
+}
