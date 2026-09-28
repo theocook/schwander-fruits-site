@@ -12,7 +12,7 @@ const STATUTS = [
 
 const REQUETE = `{
   "categories": *[_type == "categorie"] | order(ordre asc) { _id, titre },
-  "produits": *[_type == "produit"] | order(nom asc) { _id, nom, statut, "cat": categorie._ref }
+  "produits": *[_type == "produit" && !(_id in path("drafts.**"))] | order(nom asc) { _id, nom, statut, "cat": categorie._ref }
 }`
 
 export function OutilArdoise() {
@@ -63,12 +63,12 @@ export function OutilArdoise() {
   }, [donnees])
 
   if (!donnees)
-    return <p style={{ padding: 24, fontFamily: 'sans-serif' }}>Chargement des produits…</p>
+    return <p style={{ padding: 24, fontFamily: 'sans-serif', color: 'var(--card-muted-fg-color)' }}>Chargement des produits…</p>
 
   return (
     <div style={{ maxWidth: 760, margin: '0 auto', padding: '16px 16px 120px', fontFamily: 'sans-serif' }}>
-      <h1 style={{ fontSize: 22, margin: '8px 0 4px' }}>Mise à jour rapide</h1>
-      <p style={{ color: '#667', fontSize: 14, margin: '0 0 20px' }}>
+      <h1 style={{ fontSize: 22, margin: '8px 0 4px', color: 'var(--card-fg-color)' }}>Mise à jour rapide</h1>
+      <p style={{ color: 'var(--card-muted-fg-color)', fontSize: 14, margin: '0 0 20px' }}>
         Touchez le nouveau statut de chaque produit, puis appuyez une seule fois sur «&nbsp;Enregistrer&nbsp;».
       </p>
 
@@ -79,8 +79,8 @@ export function OutilArdoise() {
               fontSize: 13,
               textTransform: 'uppercase',
               letterSpacing: '0.1em',
-              color: '#123A25',
-              borderBottom: '2px solid #123A25',
+              color: 'var(--card-fg-color)',
+              borderBottom: '2px solid #3F8F4A',
               paddingBottom: 6,
             }}
           >
@@ -98,11 +98,11 @@ export function OutilArdoise() {
                   alignItems: 'center',
                   gap: '6px 12px',
                   padding: '10px 0',
-                  borderBottom: '1px solid #e3e6e2',
-                  background: change ? '#f4f9f2' : 'transparent',
+                  borderBottom: '1px solid var(--card-border-color)',
+                  background: change ? 'color-mix(in srgb, #3F8F4A 16%, transparent)' : 'transparent',
                 }}
               >
-                <strong style={{ flex: '1 1 160px', fontSize: 15, color: '#1B241E' }}>
+                <strong style={{ flex: '1 1 160px', fontSize: 15, color: 'var(--card-fg-color)' }}>
                   {p.nom}
                   {change && <span style={{ color: '#3F8F4A' }}> •</span>}
                 </strong>
@@ -115,9 +115,9 @@ export function OutilArdoise() {
                         type="button"
                         onClick={() => choisir(p, s.value)}
                         style={{
-                          border: `1.5px solid ${actif ? s.couleur : '#ccd1cc'}`,
-                          background: actif ? s.couleur : '#fff',
-                          color: actif ? '#fff' : '#556',
+                          border: `1.5px solid ${actif ? s.couleur : 'var(--card-border-color)'}`,
+                          background: actif ? s.couleur : 'transparent',
+                          color: actif ? '#fff' : 'var(--card-fg-color)',
                           fontSize: 12,
                           fontWeight: 600,
                           padding: '7px 10px',

@@ -1,0 +1,8 @@
+# Configuration de build Netlify : utilisée dès que le site sera
+# reconstruit par Netlify lui-même (déploiement continu depuis Git).
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
