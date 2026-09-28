@@ -2,6 +2,7 @@ import { defineConfig } from 'sanity'
 import { structureTool } from 'sanity/structure'
 import { frFRLocale } from '@sanity/locale-fr-fr'
 import { schemaTypes } from './schemas/index.js'
+import { outilArdoise } from './tools/OutilArdoise.jsx'
 
 const projectId = process.env.SANITY_STUDIO_PROJECT_ID || 'gf4it2ok'
 
@@ -39,4 +40,6 @@ export default defineConfig({
     frFRLocale(),
   ],
   schema: { types: schemaTypes },
+  // L'outil « Mise à jour rapide » en premier : c'est l'écran d'accueil du Studio.
+  tools: (prev) => [outilArdoise, ...prev],
 })

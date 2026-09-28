@@ -4,7 +4,7 @@ import Header from '../components/Header.astro'
 import Footer from '../components/Footer.astro'
 import { site } from '../data/site.js'
 
-const { title, description = site.baseline } = Astro.props
+const { title, description = site.baseline, noindex = false } = Astro.props
 const fullTitle = title ? `${title} — ${site.nom}` : `${site.nom} — ${site.baseline}`
 ---
 
@@ -15,6 +15,7 @@ const fullTitle = title ? `${title} — ${site.nom}` : `${site.nom} — ${site.b
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />

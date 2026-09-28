@@ -1,0 +1,254 @@
+---
+import Base from '../layouts/Base.astro'
+import { getCatalogue } from '../data/catalogue.js'
+import { EN_VENTE, STATUS_STYLES } from '../lib/sanity.js'
+
+// Page privée : non référencée (noindex) et absente du menu.
+// Outil de partage : pour chaque produit en vente, un visuel prêt à publier
+// sur Facebook/Instagram, généré dans le navigateur — aucun compte à connecter.
+const { products, categories } = await getCatalogue()
+const labelDe = Object.fromEntries(categories.map((c) => [c.id, c.label]))
+
+const EMOJI = {
+  pommes: '🍎',
+  poires: '🍐',
+  'fruits-a-noyau': '🍑',
+  'petits-fruits': '🍓',
+  legumes: '🥬',
+  autres: '🍯',
+}
+
+const poids = { disponible: 0, 'fin-de-saison': 1, bientot: 2, 'pas-de-saison': 3 }
+const tous = [...products].sort((a, b) => poids[a.status] - poids[b.status])
+const enVente = tous.filter((p) => EN_VENTE.includes(p.status))
+
+// Pour le canvas, on veut la photo en grand : on retire le recadrage 304px.
+const photoGrande = (url) =>
+  url?.includes('cdn.sanity.io') ? `${url.split('?')[0]}?w=1080&h=1080&fit=crop&auto=format` : url
+---
+
+<Base title="Partage réseaux sociaux" noindex>
+  <div class="mx-auto max-w-5xl px-5 py-14 sm:px-8 sm:py-16">
+    <p class="surtitre text-green">Outil privé</p>
+    <h1 class="mt-3 text-4xl font-semibold text-forest sm:text-5xl">Partager sur les réseaux</h1>
+    <p class="mt-5 max-w-2xl leading-relaxed text-ink/70">
+      Chaque produit en vente a son visuel et son texte prêts à publier. Sur votre téléphone,
+      «&nbsp;Partager&nbsp;» ouvre directement Facebook, Instagram ou WhatsApp. Vous publiez seulement si vous
+      en avez envie — rien n'est automatique.
+    </p>
+    <p class="mt-4 border-l-2 border-green bg-paper px-4 py-3 text-sm text-ink/65">
+      <span data-partage-compteur>{enVente.length}</span> produits à partager aujourd'hui. Cette page
+      n'apparaît pas dans le menu du site et n'est pas référencée par Google.
+    </p>
+
+    <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {tous.map((p) => {
+        const s = STATUS_STYLES[p.status]
+        return (
+          <article
+            class="border border-forest/15 bg-paper"
+            data-produit
+            data-id={p.id}
+            data-statut={p.status}
+            data-nom={p.name}
+            data-photo={photoGrande(p.image)}
+            data-emoji={EMOJI[p.category] ?? '🧺'}
+            data-categorie-label={labelDe[p.category] ?? ''}
+            hidden={!EN_VENTE.includes(p.status)}
+          >
+            {/* Aperçu : le visuel généré reprend cette composition. */}
+            <div class="relative aspect-square overflow-hidden">
+              {p.image ? (
+                <img
+                  src={p.image}
+                  alt={p.name}
+                  width="304"
+                  height="304"
+                  loading="lazy"
+                  decoding="async"
+                  class="h-full w-full object-cover"
+                />
+              ) : (
+                <div class="photo-fallback h-full w-full" />
+              )}
+              <div class="absolute inset-x-0 top-0 bg-forest/80 px-3 py-1.5">
+                <p class="surtitre text-[9px] text-cream/90">Schwander Fruits · Cheseaux-Noréaz</p>
+              </div>
+              <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-forest via-forest/70 to-transparent px-3 pt-10 pb-3">
+                <p
+                  class="surtitre text-[10px]"
+                  style={`color:${p.status === 'disponible' ? '#8FD19A' : '#F2B27C'}`}
+                  data-apercu-statut
+                >
+                  {p.status === 'disponible' ? 'Disponible cette semaine' : 'Dernière chance !'}
+                </p>
+                <p class="font-serif text-xl leading-tight font-semibold text-cream">{p.name}</p>
+              </div>
+            </div>
+
+            <div class="flex">
+              <button
+                type="button"
+                data-action="partager"
+                class="flex-1 bg-forest px-3 py-3 text-sm font-semibold text-cream transition hover:bg-green"
+              >
+                Partager
+              </button>
+              <button
+                type="button"
+                data-action="copier"
+                class="flex-1 border-l border-forest/15 px-3 py-3 text-sm font-semibold text-forest transition hover:bg-leaf"
+              >
+                Copier le texte
+              </button>
+            </div>
+          </article>
+        )
+      })}
+    </div>
+    <p class="mt-8 hidden text-sm text-ink/55" data-partage-vide>
+      Aucun produit en vente pour le moment : rien à partager aujourd'hui.
+    </p>
+  </div>
+
+  <script>
+    import '../scripts/maj-statuts.js'
+    import { EN_VENTE } from '../lib/sanity.js'
+
+    const LIEU = "À la ferme de Cheseaux-Noréaz et au marché d'Yverdon-les-Bains (mardi & samedi matin)."
+    const TAGS = '#schwanderfruits #yverdonlesbains #produitslocaux #vaud'
+
+    function texteDe(carte) {
+      const { nom, emoji, statut } = carte.dataset
+      const accroche =
+        statut === 'fin-de-saison'
+          ? `${emoji} Dernière chance pour nos ${nom} : la saison se termine !`
+          : `${emoji} Nos ${nom} sont disponibles !`
+      return `${accroche} ${LIEU}\n${TAGS}`
+    }
+
+    /** Dessine le visuel carré 1080×1080 du produit. */
+    async function dessiner(carte) {
+      const { nom, photo, statut } = carte.dataset
+      const canvas = document.createElement('canvas')
+      canvas.width = canvas.height = 1080
+      const ctx = canvas.getContext('2d')
+
+      ctx.fillStyle = '#123A25'
+      ctx.fillRect(0, 0, 1080, 1080)
+
+      if (photo) {
+        const img = new Image()
+        img.crossOrigin = 'anonymous'
+        img.src = photo
+        try {
+          await img.decode()
+          // Recadrage « cover » centré
+          const r = Math.max(1080 / img.width, 1080 / img.height)
+          const w = img.width * r
+          const h = img.height * r
+          ctx.drawImage(img, (1080 - w) / 2, (1080 - h) / 2, w, h)
+        } catch {
+          /* photo indisponible : fond vert uni */
+        }
+      }
+
+      // Voile sombre en bas pour la lisibilité du texte
+      const grad = ctx.createLinearGradient(0, 560, 0, 1080)
+      grad.addColorStop(0, 'rgba(18,58,37,0)')
+      grad.addColorStop(1, 'rgba(18,58,37,0.94)')
+      ctx.fillStyle = grad
+      ctx.fillRect(0, 560, 1080, 520)
+
+      // Bandeau de marque en haut
+      ctx.fillStyle = 'rgba(18,58,37,0.82)'
+      ctx.fillRect(0, 0, 1080, 78)
+      await document.fonts.load('600 30px "Inter Variable"')
+      ctx.fillStyle = 'rgba(250,246,236,0.95)'
+      ctx.font = '600 30px "Inter Variable", sans-serif'
+      ctx.letterSpacing = '6px'
+      ctx.fillText('SCHWANDER FRUITS · CHESEAUX-NORÉAZ', 36, 52)
+      ctx.letterSpacing = '0px'
+
+      // Statut
+      const dernierChance = statut === 'fin-de-saison'
+      ctx.fillStyle = dernierChance ? '#C9752B' : '#3F8F4A'
+      ctx.fillRect(40, 828, 22, 22)
+      ctx.fillStyle = '#FAF6EC'
+      ctx.font = '700 34px "Inter Variable", sans-serif'
+      ctx.letterSpacing = '4px'
+      ctx.fillText(dernierChance ? 'DERNIÈRE CHANCE !' : 'DISPONIBLE CETTE SEMAINE', 80, 850)
+      ctx.letterSpacing = '0px'
+
+      // Nom du produit, réduit si trop long
+      await document.fonts.load('600 92px "Fraunces Variable"')
+      let taille = 92
+      ctx.font = `600 ${taille}px "Fraunces Variable", serif`
+      while (ctx.measureText(nom).width > 1000 && taille > 44) {
+        taille -= 4
+        ctx.font = `600 ${taille}px "Fraunces Variable", serif`
+      }
+      ctx.fillStyle = '#FAF6EC'
+      ctx.fillText(nom, 38, 952)
+
+      // Pied
+      ctx.fillStyle = 'rgba(250,246,236,0.78)'
+      ctx.font = '400 32px "Inter Variable", sans-serif'
+      ctx.fillText("À la ferme & au marché d'Yverdon — schwander-fruits.ch", 40, 1024)
+
+      return canvas
+    }
+
+    async function partager(carte, bouton) {
+      const libelle = bouton.textContent
+      bouton.textContent = 'Préparation…'
+      try {
+        const canvas = await dessiner(carte)
+        const blob = await new Promise((r) => canvas.toBlob(r, 'image/png'))
+        const fichier = new File([blob], `${carte.dataset.id}.png`, { type: 'image/png' })
+        if (navigator.canShare?.({ files: [fichier] })) {
+          await navigator.share({ files: [fichier], text: texteDe(carte) })
+        } else {
+          // Ordinateur : on télécharge l'image, le texte se copie avec l'autre bouton.
+          const a = document.createElement('a')
+          a.href = URL.createObjectURL(blob)
+          a.download = fichier.name
+          a.click()
+          URL.revokeObjectURL(a.href)
+        }
+      } catch (e) {
+        if (e?.name !== 'AbortError') bouton.textContent = 'Erreur — réessayer'
+      }
+      setTimeout(() => (bouton.textContent = libelle), 1500)
+    }
+
+    document.addEventListener('click', async (e) => {
+      const bouton = e.target.closest('[data-action]')
+      if (!bouton) return
+      const carte = bouton.closest('[data-produit]')
+      if (bouton.dataset.action === 'partager') return partager(carte, bouton)
+      await navigator.clipboard.writeText(texteDe(carte))
+      const libelle = bouton.textContent
+      bouton.textContent = 'Copié ✓'
+      setTimeout(() => (bouton.textContent = libelle), 1500)
+    })
+
+    // Statuts frais : les cartes suivent (visibilité, libellé de l'aperçu, compteur).
+    document.addEventListener('statuts:maj', () => {
+      const cartes = [...document.querySelectorAll('[data-produit]')]
+      cartes.forEach((c) => {
+        c.hidden = !EN_VENTE.includes(c.dataset.statut)
+        const apercu = c.querySelector('[data-apercu-statut]')
+        if (apercu) {
+          const dc = c.dataset.statut === 'fin-de-saison'
+          apercu.textContent = dc ? 'Dernière chance !' : 'Disponible cette semaine'
+          apercu.style.color = dc ? '#F2B27C' : '#8FD19A'
+        }
+      })
+      const visibles = cartes.filter((c) => !c.hidden).length
+      const compteur = document.querySelector('[data-partage-compteur]')
+      if (compteur) compteur.textContent = String(visibles)
+      document.querySelector('[data-partage-vide]')?.classList.toggle('hidden', visibles > 0)
+    })
+  </script>
+</Base>
